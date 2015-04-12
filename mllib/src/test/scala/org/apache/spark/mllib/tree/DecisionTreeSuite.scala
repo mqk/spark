@@ -971,7 +971,7 @@ object DecisionTreeSuite extends FunSuite {
 
   /** Create a leaf node with the given node ID */
   private def createLeafNode(id: Int): Node = {
-    Node(nodeIndex = id, new Predict(0.0, 1.0), impurity = 0.5, isLeaf = true)
+    Node(nodeIndex = id, new Predict(0.0, mutable.Map(0.0 -> 1.0)), impurity = 0.5, isLeaf = true)
   }
 
   /**
@@ -979,7 +979,7 @@ object DecisionTreeSuite extends FunSuite {
    * Note: This does NOT set the child nodes.
    */
   private def createInternalNode(id: Int, featureType: FeatureType): Node = {
-    val node = Node(nodeIndex = id, new Predict(0.0, 1.0), impurity = 0.5, isLeaf = false)
+    val node = Node(nodeIndex = id, new Predict(0.0, mutable.Map(0.0 -> 1.0)), impurity = 0.5, isLeaf = false)
     featureType match {
       case Continuous =>
         node.split = Some(new Split(feature = 0, threshold = 0.5, Continuous,
@@ -989,8 +989,9 @@ object DecisionTreeSuite extends FunSuite {
           categories = List(0.0, 1.0)))
     }
     // TODO: The information gain stats should be consistent with the same info stored in children.
+    val prob = mutable.Map(0.0 -> 0.6, 1.0 -> 0.4)
     node.stats = Some(new InformationGainStats(gain = 0.1, impurity = 0.2,
-      leftImpurity = 0.3, rightImpurity = 0.4, new Predict(1.0, 0.4), new Predict(0.0, 0.6)))
+      leftImpurity = 0.3, rightImpurity = 0.4, new Predict(1.0, prob), new Predict(0.0, prob)))
     node
   }
 

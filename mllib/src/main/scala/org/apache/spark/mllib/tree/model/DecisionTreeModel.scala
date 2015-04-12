@@ -45,7 +45,7 @@ import org.apache.spark.util.Utils
 class DecisionTreeModel(val topNode: Node, val algo: Algo) extends Serializable with Saveable {
 
   /**
-   * Predict values for a single data point using the model trained.
+   * Predict value for a single data point using the model trained.
    *
    * @param features array representing a single data point
    * @return Double prediction from the trained model
@@ -73,6 +73,34 @@ class DecisionTreeModel(val topNode: Node, val algo: Algo) extends Serializable 
   def predict(features: JavaRDD[Vector]): JavaRDD[Double] = {
     predict(features.rdd)
   }
+
+  /**
+   * Predict value and corresponding probabilities for a single data point using the model trained.
+   *
+   * @param features array representing a single data point
+   * @return Double prediction and its probability from the trained model
+   */
+  def predictWithProbabilities(features: Vector): Predict = {
+    topNode.predictWithProbabilities(features)
+  }
+
+  /**
+   * Predict values and their corresponding probabilities for the given data set using the model trained.
+   *
+   * @param features RDD representing data points to be predicted
+   * @return RDD of predictions for each of the given data points
+   */
+  def predictWithProbabilities(features: RDD[Vector]): RDD[Predict] = {
+    features.map(x => predictWithProbabilities(x))
+  }
+
+  /**
+   * Java-friendly version of [[org.apache.spark.mllib.tree.model.DecisionTreeModel#predictWithProbabilities]].
+   */
+  def predictWithProbabilities(features: JavaRDD[Vector]): JavaRDD[Predict] = {
+    predictWithProbabilities(features.rdd)
+  }
+
 
   /**
    * Get number of nodes in tree, including leaf nodes.
@@ -125,14 +153,14 @@ object DecisionTreeModel extends Loader[DecisionTreeModel] with Logging {
     // Hard-code class name string in case it changes in the future
     def thisClassName: String = "org.apache.spark.mllib.tree.DecisionTreeModel"
 
-    case class PredictData(predict: Double, prob: Double) {
+    case class PredictData(predict: Double, prob: scala.collection.Map[Double, Double]) {
       def toPredict: Predict = new Predict(predict, prob)
     }
 
     object PredictData {
       def apply(p: Predict): PredictData = PredictData(p.predict, p.prob)
 
-      def apply(r: Row): PredictData = PredictData(r.getDouble(0), r.getDouble(1))
+      def apply(r: Row): PredictData = PredictData(r.getDouble(0), r.getMap(1))
     }
 
     case class SplitData(

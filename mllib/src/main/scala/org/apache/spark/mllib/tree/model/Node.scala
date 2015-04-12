@@ -101,6 +101,31 @@ class Node (
   }
 
   /**
+   * predict value and corresponding probabilities if node is not leaf
+   * @param features feature value
+   * @return predicted value
+   */
+  def predictWithProbabilities(features: Vector) : Predict = {
+    if (isLeaf) {
+      predict
+    } else{
+      if (split.get.featureType == Continuous) {
+        if (features(split.get.feature) <= split.get.threshold) {
+          leftNode.get.predictWithProbabilities(features)
+        } else {
+          rightNode.get.predictWithProbabilities(features)
+        }
+      } else {
+        if (split.get.categories.contains(features(split.get.feature))) {
+          leftNode.get.predictWithProbabilities(features)
+        } else {
+          rightNode.get.predictWithProbabilities(features)
+        }
+      }
+    }
+  }
+
+  /**
    * Returns a deep copy of the subtree rooted at this node.
    */
   private[tree] def deepCopy(): Node = {
@@ -159,7 +184,7 @@ class Node (
     }
     val prefix: String = " " * indentFactor
     if (isLeaf) {
-      prefix + s"Predict: ${predict.predict}\n"
+      prefix + s"Predict: ${predict.predict}  Prob: ${predict.prob.getOrElse(predict.predict, 0.0)}\n"
     } else {
       prefix + s"If ${splitToString(split.get, left=true)}\n" +
         leftNode.get.subtreeToString(indentFactor + 1) +

@@ -74,5 +74,5 @@ private[tree] object InformationGainStats {
    * minimum number of instances per node.
    */
   val invalidInformationGainStats = new InformationGainStats(Double.MinValue, -1.0, -1.0, -1.0,
-    new Predict(0.0, 0.0), new Predict(0.0, 0.0))
+    new Predict(0.0, Map.empty), new Predict(0.0, Map.empty))
 }

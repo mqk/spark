@@ -19,6 +19,7 @@ package org.apache.spark.mllib.tree.model
 
 import org.apache.spark.annotation.DeveloperApi
 
+import scala.collection.mutable
 /**
  * Predicted value for a node
  * @param predict predicted value
@@ -27,10 +28,10 @@ import org.apache.spark.annotation.DeveloperApi
 @DeveloperApi
 class Predict(
     val predict: Double,
-    val prob: Double = 0.0) extends Serializable {
+    val prob: scala.collection.Map[Double, Double] = mutable.Map.empty) extends Serializable {
 
   override def toString: String = {
-    "predict = %f, prob = %f".format(predict, prob)
+    s"predict = ${predict} prob = ${prob}"
   }
 
   override def equals(other: Any): Boolean = {
@@ -41,6 +42,6 @@ class Predict(
   }
 
   override def hashCode: Int = {
-    com.google.common.base.Objects.hashCode(predict: java.lang.Double, prob: java.lang.Double)
+    com.google.common.base.Objects.hashCode(predict: java.lang.Double, prob)
   }
 }

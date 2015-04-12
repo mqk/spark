@@ -755,8 +755,8 @@ object DecisionTree extends Serializable with Logging {
 
   private def calculatePredict(impurityCalculator: ImpurityCalculator): Predict = {
     val predict = impurityCalculator.predict
-    val prob = impurityCalculator.prob(predict)
-    new Predict(predict, prob)
+    val prob = impurityCalculator.stats.map(_/impurityCalculator.count)
+    new Predict(predict, prob.zipWithIndex.map(t => (t._2.toDouble, t._1)).toMap)
   }
 
   /**
