@@ -270,6 +270,50 @@ private[tree] sealed class TreeEnsembleModel(
     predict(features.rdd).toJavaRDD().asInstanceOf[JavaRDD[java.lang.Double]]
   }
 
+
+  /**
+   * Predict value and the corresponding probabilities for a single data point using the model trained.
+   *
+   * Only available for classification algorithms.
+   *
+   * @param features array representing a single data point
+   * @return predicted category and the category probabilities from the trained model
+   */
+  def predictWithProbabilities(features: Vector): Predict = {
+    require(algo == Classification, s"predictWithProbabilities is only available for Classification. (algo: ${algo})")
+
+    val probabilities = mutable.Map.empty[Double, Double]
+    trees.view.zip(treeWeights).foreach { case (tree, weight) =>
+      val prediction = tree.predictWithProbabilities(features)
+      probabilities ++= prediction.prob.map{ case (k,v) => k -> (v*weight + probabilities.getOrElse(k, 0.0)) }
+    }
+
+    new Predict(
+      probabilities.maxBy(_._2)._1,
+      probabilities.map{ case (k,v) => k -> v/sumWeights }
+    )
+  }
+
+  /**
+   * Predict values and their corresponding probabilies for the given data set.
+   *
+   * @param features RDD representing data points to be predicted
+   * @return RDD[Predict] where each entry contains the corresponding prediction
+   */
+  def predictWithProbabilities(features: RDD[Vector]): RDD[Predict] = features.map(x => predictWithProbabilities(x))
+
+  /**
+   * Java-friendly version of [[org.apache.spark.mllib.tree.model.TreeEnsembleModel#predictWithProbabilities]].
+   */
+  def predictWithProbabilities(features: JavaRDD[Vector]): JavaRDD[Predict] = {
+    predictWithProbabilities(features.rdd).toJavaRDD()
+  }
+
+
+
+
+
+
   /**
    * Print a summary of the model.
    */
